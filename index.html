@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notification Analytics Test</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1F0KNQD5W3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1F0KNQD5W3');
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f7;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .content-section h2 {
+            color: #1d1d1f;
+            margin-top: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .content-section p {
+            color: #86868b;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            color: #1d1d1f;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: #86868b;
+            font-size: 1rem;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .cta-section h2 {
+            margin: 0 0 20px 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .cta-section p {
+            margin: 0 0 30px 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            background: white;
+            color: #ee5a24;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .analytics-info {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .analytics-info h3 {
+            color: #1976d2;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        
+        .analytics-info p {
+            color: #1565c0;
+            margin-bottom: 15px;
+        }
+        
+        .analytics-info code {
+            background: #bbdefb;
+            color: #0d47a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        .test-controls {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .test-controls h3 {
+            color: #f57c00;
+            margin-top: 0;
+        }
+        
+        .test-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        
+        .test-btn:hover {
+            background: #f57c00;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content-section {
+                padding: 20px;
+            }
+            
+            .cta-section {
+                padding: 40px 20px;
+            }
+            
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MobiLoud App</h1>
+        <p>Your gateway to seamless mobile experiences</p>
+    </div>
+    
+    <div class="container">
+        <div class="content-section">
+            <h2>Welcome to Our Platform</h2>
+            <p>Experience the next generation of mobile applications with push notifications, real-time updates, and seamless user experiences. Our platform delivers content that matters, when it matters.</p>
+            
+            <p>Stay connected with your audience through intelligent notification systems that respect user preferences while maximizing engagement. Whether you're building e-commerce, news, or social applications, our tools help you create meaningful connections.</p>
+        </div>
+        
+        <div class="analytics-info">
+            <h3>🔬 Analytics Testing Page</h3>
+            <p>This page includes Google Analytics tracking with ID: <code>G-1F0KNQD5W3</code></p>
+            <p>When you add the push notification popup widget with <code>enableAnalytics: true</code>, you should see events in GA Real-Time reports:</p>
+            <ul>
+                <li><code>ml_popup_displayed</code> - When popup shows</li>
+                <li><code>ml_popup_accepted</code> - When user clicks enable</li>
+                <li><code>ml_popup_declined</code> - When user clicks decline</li>
+                <li><code>ml_notifications_enabled</code> - When notifications are enabled</li>
+                <li><code>ml_popup_closed</code> - When popup is closed</li>
+            </ul>
+        </div>
+        
+        <div class="test-controls">
+            <h3>🧪 Test Controls</h3>
+            <p>Use these buttons to test your popup widget implementation:</p>
+            <button class="test-btn" onclick="testBasicPopup()">Test Basic Popup</button>
+            <button class="test-btn" onclick="testAnalyticsPopup()">Test Analytics Popup</button>
+            <button class="test-btn" onclick="testDebugMode()">Test Debug Mode</button>
+            <button class="test-btn" onclick="checkGAStatus()">Check GA Status</button>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <h3>Smart Notifications</h3>
+                <p>Intelligent push notifications that reach users at the perfect moment with personalized content.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Cross-Platform</h3>
+                <p>Seamless experience across iOS, Android, and web platforms with consistent functionality.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics</h3>
+                <p>Comprehensive tracking and insights to understand user behavior and optimize engagement.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time</h3>
+                <p>Instant updates and live synchronization to keep your users informed and engaged.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Customizable</h3>
+                <p>Flexible design options and configuration to match your brand and user experience needs.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Secure</h3>
+                <p>Enterprise-grade security with privacy controls and compliance with data protection standards.</p>
+            </div>
+        </div>
+        
+        <div class="cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of developers who trust our platform for their mobile notification needs.</p>
+            <button class="btn">Start Building Today</button>
+        </div>
+        
+        <div class="content-section">
+            <h2>Why Choose Our Platform?</h2>
+            <p>Built for developers, designed for users. Our platform combines powerful APIs with intuitive user experiences to create applications that users love and developers enjoy building.</p>
+            
+            <p>From startups to enterprise companies, our scalable infrastructure grows with your needs while maintaining consistent performance and reliability. Focus on what matters - building great products - while we handle the complex notification infrastructure.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Test functions for popup widget
+        function testBasicPopup() {
+            if (typeof createPushPopup === 'function') {
+                const popup = createPushPopup({
+                    heading: "Enable Notifications",
+                    text: "Stay updated with our latest news and updates.",
+                    debugMode: true
+                });
+                popup.show();
+            } else {
+                alert('Push popup widget not loaded. Please add your script.js file.');
+            }
+        }
+        
+        function testAnalyticsPopup() {
+            if (typeof createPushPopup === 'function') {
+                const popup = createPushPopup({
+                    heading: "Enable Analytics Tracking",
+                    text: "This popup will send events to Google Analytics for testing.",
+                    enableAnalytics: true,
+                    debugMode: true
+                });
+                popup.show();
+            } else {
+                alert('Push popup widget not loaded. Please add your script.js file.');
+            }
+        }
+        
+        function testDebugMode() {
+            if (typeof createPushPopup === 'function') {
+                console.log('[Test] Creating popup with debug mode and analytics...');
+                const popup = createPushPopup({
+                    heading: "Debug Mode Test",
+                    text: "Check the console for detailed analytics logging.",
+                    enableAnalytics: true,
+                    debugMode: true,
+                    autoTrigger: true,
+                    delay: 1000
+                });
+            } else {
+                alert('Push popup widget not loaded. Please add your script.js file.');
+            }
+        }
+        
+        function checkGAStatus() {
+            const hasGtag = typeof window.gtag === 'function';
+            const hasDataLayer = Array.isArray(window.dataLayer);
+            
+            console.log('Google Analytics Status:');
+            console.log('- gtag function available:', hasGtag);
+            console.log('- dataLayer available:', hasDataLayer);
+            console.log('- dataLayer length:', hasDataLayer ? window.dataLayer.length : 'N/A');
+            
+            alert(`Google Analytics Status:\n- gtag: ${hasGtag ? '✅ Available' : '❌ Not found'}\n- dataLayer: ${hasDataLayer ? '✅ Available' : '❌ Not found'}`);
+            
+            if (hasGtag) {
+                // Test event
+                gtag('event', 'test_event', {
+                    event_category: 'testing',
+                    event_label: 'ga_status_check'
+                });
+                console.log('Test event sent to GA');
+            }
+        }
+        
+        // Log page load for testing
+        console.log('[Test Page] Google Analytics test page loaded');
+        console.log('[Test Page] gtag available:', typeof window.gtag === 'function');
+        console.log('[Test Page] dataLayer available:', Array.isArray(window.dataLayer));
+        
+        // Send a test page view event
+        if (typeof window.gtag === 'function') {
+            gtag('event', 'page_view', {
+                page_title: 'Push Notification Analytics Test',
+                page_location: window.location.href
+            });
+        }
+    </script>
+</body>
+</html>
