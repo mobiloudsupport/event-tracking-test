@@ -225,6 +225,660 @@
             <p>Experience the next generation of mobile applications with push notifications, real-time updates, and seamless user experiences. Our platform delivers content that matters, when it matters.</p>
             
             <p>Stay connected with your audience through intelligent notification systems that respect user preferences while maximizing engagement. Whether you're building e-commerce, news, or social applications, our tools help you create meaningful connections.</p>
+            
+            <p><strong>🎬 What to Expect:</strong> In 3 seconds, you'll see our push notification popup with Google Analytics tracking enabled. This demonstrates the widget's auto-trigger functionality and analytics integration!</p>
+        </div>
+        
+        <div class="analytics-info">
+            <h3>🔬 Analytics Testing Page</h3>
+            <p>This page includes Google Analytics tracking with ID: <code>G-1F0KNQD5W3</code></p>
+            <p><strong>🎯 Auto-Trigger Demo:</strong> A popup with analytics enabled will automatically appear 3 seconds after page load!</p>
+            <p>When you interact with the popup, you should see events in GA Real-Time reports:</p>
+            <ul>
+                <li><code>ml_popup_displayed</code> - When popup shows</li>
+                <li><code>ml_popup_accepted</code> - When user clicks enable</li>
+                <li><code>ml_popup_declined</code> - When user clicks decline</li>
+                <li><code>ml_notifications_enabled</code> - When notifications are enabled</li>
+                <li><code>ml_popup_closed</code> - When popup is closed</li>
+            </ul>
+            <p><strong>Debug Mode:</strong> All analytics events are logged to the browser console for testing.</p>
+        </div>
+        
+        <div class="test-controls">
+            <h3>🧪 Test Controls</h3>
+            <p>Use these buttons to test your popup widget implementation:</p>
+            <button class="test-btn" onclick="testBasicPopup()">Test Basic Popup</button>
+            <button class="test-btn" onclick="testAnalyticsPopup()">Test Analytics Popup</button>
+            <button class="test-btn" onclick="testDebugMode()">Test Debug Mode</button>
+            <button class="test-btn" onclick="checkGAStatus()">Check GA Status</button>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <h3>Smart Notifications</h3>
+                <p>Intelligent push notifications that reach users at the perfect moment with personalized content.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Cross-Platform</h3>
+                <p>Seamless experience across iOS, Android, and web platforms with consistent functionality.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics</h3>
+                <p>Comprehensive tracking and insights to understand user behavior and optimize engagement.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time</h3>
+                <p>Instant updates and live synchronization to keep your users informed and engaged.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Customizable</h3>
+                <p>Flexible design options and configuration to match your brand and user experience needs.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Secure</h3>
+                <p>Enterprise-grade security with privacy controls and compliance with data protection standards.</p>
+            </div>
+        </div>
+        
+        <div class="cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of developers who trust our platform for their mobile notification needs.</p>
+            <button class="btn">Start Building Today</button>
+        </div>
+        
+        <div class="content-section">
+            <h2>Why Choose Our Platform?</h2>
+            <p>Built for developers, designed for users. Our platform combines powerful APIs with intuitive user experiences to create applications that users love and developers enjoy building.</p>
+            
+            <p>From startups to enterprise companies, our scalable infrastructure grows with your needs while maintaining consistent performance and reliability. Focus on what matters - building great products - while we handle the complex notification infrastructure.</p>
+        </div>
+    </div>
+    
+    <!-- Include the Push Notification Popup Widget -->
+    <script>
+/**
+ * Push Notification Popup Widget - v2.1
+ * A minimal, modern popup for prompting push notification permissions
+ * Integrated with MobiLoud app platform
+ * 
+ * Features:
+ * - Auto-trigger session control (shows only once per page session)
+ * - Manual dark mode control
+ * - Real-time push status monitoring
+ * - Cookie-based session limiting
+ * - Google Analytics integration (optional)
+ * 
+ * Usage:
+ * const popup = createPushPopup({
+ *     heading: "Enable Notifications",
+ *     text: "Stay updated with our latest news.",
+ *     autoTrigger: true,
+ *     darkMode: false,
+ *     debugMode: false // Set to true for browser testing
+ * });
+ */
+
+class PushNotificationPopup {
+    // Track style usage count
+    static styleUsageCount = 0;
+
+    constructor(options = {}) {
+        this.options = {
+            heading: options.heading || "Enable Notifications",
+            image: options.image || null,
+            text: options.text || "Stay updated with our latest news and updates. We'll send you relevant notifications.",
+            acceptText: options.acceptText || "Enable",
+            declineText: options.declineText !== undefined ? options.declineText : "Not Now",
+            successMessage: options.successMessage || "✅ Notifications enabled! You're all set.",
+            onAccept: options.onAccept || (() => console.log('Accepted')),
+            onDecline: options.onDecline || (() => console.log('Declined')),
+            onClose: options.onClose || (() => console.log('Closed')),
+            autoTrigger: options.autoTrigger || false,
+            triggerElement: options.triggerElement || null,
+            delay: options.delay || 0,
+            allowedUrls: options.allowedUrls || null,
+            debugMode: options.debugMode || false,
+            maxSessions: options.maxSessions || null,
+            timeframeDays: options.timeframeDays || null,
+            darkMode: options.darkMode || false,
+            enableAnalytics: options.enableAnalytics || false
+        };
+
+        this.isVisible = false;
+        this.overlay = null;
+        this.popup = null;
+        this.currentPushStatus = null;
+        this.statusCheckInterval = null;
+        this._onOverlayClick = null;
+        this._onKeyDown = null;
+        this._originalPushCallback = null;
+        this.cookieName = 'ml_push_popup_tracking';
+        this.hasAutoTriggeredThisSession = false;
+
+        this.init();
+    }
+
+    trackEvent(eventName, customParameters = {}) {
+        if (!this.options.enableAnalytics) {
+            return;
+        }
+
+        try {
+            // Check if gtag is available
+            if (typeof window.gtag !== 'function') {
+                if (this.options.debugMode) {
+                    console.warn('[PushPopup Analytics] Google Analytics (gtag) not available - event not tracked:', eventName);
+                }
+                return;
+            }
+
+            // Ensure event name has ml_ prefix
+            const prefixedEventName = eventName.startsWith('ml_') ? eventName : `ml_${eventName}`;
+
+            // Standard event parameters
+            const standardParameters = {
+                event_category: 'engagement',
+                event_label: 'push_notification_popup',
+                page_url: window.location.href,
+                page_title: document.title,
+                user_agent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+
+            // Merge custom parameters with standard ones
+            const eventParameters = { ...standardParameters, ...customParameters };
+
+            // Track the event
+            window.gtag('event', prefixedEventName, eventParameters);
+
+            if (this.options.debugMode) {
+                console.log('[PushPopup Analytics] Event tracked:', {
+                    event: prefixedEventName,
+                    parameters: eventParameters
+                });
+            }
+
+        } catch (error) {
+            if (this.options.debugMode) {
+                console.error('[PushPopup Analytics] Error tracking event:', eventName, error);
+            }
+        }
+    }
+
+    init() {
+        // Check if current URL is allowed
+        if (!this.isUrlAllowed()) {
+            return; // Don't initialize if URL is not in allowed list
+        }
+
+        // Check if should show popup (app context + push disabled, unless debug mode)
+        if (!this.shouldShowPopup()) {
+            return; // Don't initialize if conditions aren't met
+        }
+
+        this.createStyles();
+        this.createPopup();
+        this.bindEvents();
+        this.setupPushStatusMonitoring();
+
+        // Auto-trigger if enabled
+        if (this.options.autoTrigger) {
+            setTimeout(() => this.show(true), this.options.delay);
+        }
+
+        // Bind to trigger element if provided
+        if (this.options.triggerElement) {
+            const element = typeof this.options.triggerElement === 'string' 
+                ? document.querySelector(this.options.triggerElement)
+                : this.options.triggerElement;
+            
+            if (element) {
+                element.addEventListener('click', () => this.show());
+            }
+        }
+    }
+
+    isInApp() {
+        // Check if user agent contains "canvas" (case insensitive)
+        return navigator.userAgent.toLowerCase().includes('canvas');
+    }
+
+    isPushEnabled() {
+        try {
+            // Check MobiLoud push notification status
+            return !!(window.mobiloudAppInfo && window.mobiloudAppInfo.pushSubscribed);
+        } catch (e) {
+            // If can't determine status, assume disabled
+            return false;
+        }
+    }
+
+    shouldShowPopup() {
+        // In debug mode, bypass all checks
+        if (this.options.debugMode) {
+            console.log('[PushPopup Debug] Debug mode enabled - bypassing app and push checks');
+            return true;
+        }
+
+        // Check if user is in the app
+        if (!this.isInApp()) {
+            console.log('[PushPopup] Not in app context - popup will not show');
+            return false;
+        }
+
+        // Check if push notifications are already enabled
+        if (this.isPushEnabled()) {
+            console.log('[PushPopup] Push notifications already enabled - popup will not show');
+            return false;
+        }
+
+        // Check session limits if configured
+        if (this.options.maxSessions !== null && this.options.timeframeDays !== null) {
+            if (!this.shouldShowBasedOnLimits()) {
+                console.log('[PushPopup] Session limit reached - popup will not show');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    getCookieData() {
+        try {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith(this.cookieName + '='));
+            
+            if (!cookieValue) {
+                return { count: 0, firstShown: null };
+            }
+            
+            const data = JSON.parse(decodeURIComponent(cookieValue.split('=')[1]));
+            return data;
+        } catch (e) {
+            return { count: 0, firstShown: null };
+        }
+    }
+
+    setCookieData(data) {
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+        const cookieValue = encodeURIComponent(JSON.stringify(data));
+        document.cookie = `${this.cookieName}=${cookieValue}; expires=${expires.toUTCString()}; path=/`;
+    }
+
+    shouldShowBasedOnLimits() {
+        const data = this.getCookieData();
+        const now = new Date().getTime();
+        
+        // If no previous data, allow showing
+        if (!data.firstShown) {
+            return true;
+        }
+        
+        const daysSinceFirst = (now - data.firstShown) / (1000 * 60 * 60 * 24);
+        
+        // If outside timeframe, reset count
+        if (daysSinceFirst > this.options.timeframeDays) {
+            this.setCookieData({ count: 0, firstShown: now });
+            return true;
+        }
+        
+        // Check if under the limit
+        return data.count < this.options.maxSessions;
+    }
+
+    incrementSessionCount() {
+        if (this.options.maxSessions === null || this.options.timeframeDays === null) {
+            return;
+        }
+        
+        const data = this.getCookieData();
+        const now = new Date().getTime();
+        
+        if (!data.firstShown) {
+            // First time showing
+            this.setCookieData({ count: 1, firstShown: now });
+        } else {
+            const daysSinceFirst = (now - data.firstShown) / (1000 * 60 * 60 * 24);
+            
+            if (daysSinceFirst > this.options.timeframeDays) {
+                // Reset timeframe
+                this.setCookieData({ count: 1, firstShown: now });
+            } else {
+                // Increment count
+                this.setCookieData({ count: data.count + 1, firstShown: data.firstShown });
+            }
+        }
+    }
+
+    setupPushStatusMonitoring() {
+        // Set up real-time push status monitoring
+        this.currentPushStatus = this.isPushEnabled();
+
+        // Store original callback for cleanup
+        this._originalPushCallback = window.mlPushStatusChanged;
+        
+        // Override the global push status change callback
+        window.mlPushStatusChanged = (isSubscribed) => {
+            // Call original callback if it existed
+            if (typeof this._originalPushCallback === 'function') {
+                this._originalPushCallback(isSubscribed);
+            }
+
+            // Update our status and UI
+            this.currentPushStatus = isSubscribed;
+            this.updateUIForPushStatus(isSubscribed);
+        };
+
+        // Poll for status changes as backup (in case callback doesn't fire)
+        this.statusCheckInterval = setInterval(() => {
+            const newStatus = this.isPushEnabled();
+            if (newStatus !== this.currentPushStatus) {
+                this.currentPushStatus = newStatus;
+                this.updateUIForPushStatus(newStatus);
+            }
+        }, 1000);
+    }
+
+    updateUIForPushStatus(isEnabled) {
+        if (!this.popup) return;
+
+        const buttonsContainer = this.popup.querySelector('.ml-push-popup-buttons');
+        const acceptBtn = this.popup.querySelector('.ml-push-popup-accept');
+
+        if (isEnabled && buttonsContainer && acceptBtn) {
+            // Track that notifications were successfully enabled
+            this.trackEvent('ml_notifications_enabled', {
+                event_category: 'conversion',
+                value: 1
+            });
+            
+            // Replace buttons with success message
+            buttonsContainer.innerHTML = `
+                <div class="ml-push-popup-success">
+                    ${this.options.successMessage}
+                </div>
+            `;
+
+            // Note: Removed auto-hide - user must manually close the popup
+        }
+    }
+
+    isUrlAllowed() {
+        // If no URL restrictions specified, allow all URLs
+        if (!this.options.allowedUrls) {
+            return true;
+        }
+
+        const currentUrl = window.location.href;
+        const currentPath = window.location.pathname;
+        const allowedUrls = Array.isArray(this.options.allowedUrls) 
+            ? this.options.allowedUrls 
+            : [this.options.allowedUrls];
+
+        return allowedUrls.some(pattern => {
+            // Exact match
+            if (pattern === currentUrl || pattern === currentPath) {
+                return true;
+            }
+
+            // Wildcard matching (* = any characters)
+            if (pattern.includes('*')) {
+                const regexPattern = pattern
+                    .replace(/[.+?^${}()|[\]\\]/g, '\\    <script>
+        // Test functions for popup widget
+        function testBasicPopup() {
+            if (typeof createPushPopup === 'function') {
+                const popup = createPushPopup({
+                    heading: "Enable Notifications",
+                    text: "Stay updated with our latest news and updates.",
+                    debugMode: true
+                });
+                popup.show();
+            } else {
+                alert('Push popup widget not loaded. Please add your script.js file.');
+            }
+        }') // Escape special regex chars
+                    .replace(/\*/g, '.*'); // Convert * to .*
+                const regex = new RegExp(`^${regexPattern}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notification Analytics Test</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1F0KNQD5W3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1F0KNQD5W3');
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f7;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .content-section h2 {
+            color: #1d1d1f;
+            margin-top: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .content-section p {
+            color: #86868b;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            color: #1d1d1f;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: #86868b;
+            font-size: 1rem;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .cta-section h2 {
+            margin: 0 0 20px 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .cta-section p {
+            margin: 0 0 30px 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            background: white;
+            color: #ee5a24;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .analytics-info {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .analytics-info h3 {
+            color: #1976d2;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        
+        .analytics-info p {
+            color: #1565c0;
+            margin-bottom: 15px;
+        }
+        
+        .analytics-info code {
+            background: #bbdefb;
+            color: #0d47a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        .test-controls {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .test-controls h3 {
+            color: #f57c00;
+            margin-top: 0;
+        }
+        
+        .test-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        
+        .test-btn:hover {
+            background: #f57c00;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content-section {
+                padding: 20px;
+            }
+            
+            .cta-section {
+                padding: 40px 20px;
+            }
+            
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MobiLoud App</h1>
+        <p>Your gateway to seamless mobile experiences</p>
+    </div>
+    
+    <div class="container">
+        <div class="content-section">
+            <h2>Welcome to Our Platform</h2>
+            <p>Experience the next generation of mobile applications with push notifications, real-time updates, and seamless user experiences. Our platform delivers content that matters, when it matters.</p>
+            
+            <p>Stay connected with your audience through intelligent notification systems that respect user preferences while maximizing engagement. Whether you're building e-commerce, news, or social applications, our tools help you create meaningful connections.</p>
         </div>
         
         <div class="analytics-info">
@@ -301,49 +955,521 @@
         </div>
     </div>
     
+, 'i');
+                return regex.test(currentUrl) || regex.test(currentPath);
+            }
+
+            // Regex pattern (if it starts and ends with /)
+            if (pattern.startsWith('/') && pattern.endsWith('/')) {
+                const regexPattern = pattern.slice(1, -1);
+                const regex = new RegExp(regexPattern, 'i');
+                return regex.test(currentUrl) || regex.test(currentPath);
+            }
+
+            // Partial match (contains)
+            return currentUrl.includes(pattern) || currentPath.includes(pattern);
+        });
+    }
+
+    createStyles() {
+        if (!document.getElementById('ml-push-popup-styles')) {
+            const styles = `
+            .ml-push-popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(10px);
+                z-index: 10000;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+
+            .ml-push-popup-overlay.ml-visible {
+                opacity: 1;
+                pointer-events: all;
+            }
+
+            .ml-push-popup {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                border-radius: 20px 20px 0 0;
+                padding: 24px;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+                transform: translateY(100%);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                max-width: 500px;
+                margin: 0 auto;
+                z-index: 10001;
+            }
+            
+            .ml-push-popup.ml-dark-mode {
+                background: #2c2c2e;
+            }
+
+            .ml-push-popup.ml-visible {
+                transform: translateY(0);
+            }
+
+            .ml-push-popup-close {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                width: 32px;
+                height: 32px;
+                border: none;
+                background: #f5f5f5;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                color: #666;
+                transition: all 0.2s ease;
+            }
+            
+            .ml-dark-mode .ml-push-popup-close {
+                background: #48484a;
+                color: #a1a1a6;
+            }
+
+            .ml-push-popup-close:hover {
+                background: #e5e5e5;
+                transform: scale(1.1);
+            }
+            
+            .ml-dark-mode .ml-push-popup-close:hover {
+                background: #5a5a5c;
+            }
+
+            .ml-push-popup-content {
+                text-align: center;
+                padding-top: 12px;
+            }
+
+            .ml-push-popup-heading {
+                font-size: 22px;
+                font-weight: 600;
+                color: #1a1a1a;
+                margin: 0 0 16px 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            
+            .ml-dark-mode .ml-push-popup-heading {
+                color: white;
+            }
+
+            .ml-push-popup-image {
+                width: 64px;
+                height: 64px;
+                margin: 0 auto 16px auto;
+                border-radius: 12px;
+                object-fit: cover;
+            }
+
+            .ml-push-popup-text {
+                font-size: 16px;
+                line-height: 1.5;
+                color: #666;
+                margin: 0 0 24px 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            
+            .ml-dark-mode .ml-push-popup-text {
+                color: #a1a1a6;
+            }
+
+            .ml-push-popup-buttons {
+                display: flex;
+                gap: 12px;
+                flex-direction: column;
+            }
+
+            .ml-push-popup-button {
+                padding: 16px 24px;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                border: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+
+            .ml-push-popup-accept {
+                background: #007AFF;
+                color: white;
+            }
+
+            .ml-push-popup-accept:hover {
+                background: #0056CC;
+                transform: translateY(-1px);
+            }
+
+            .ml-push-popup-decline {
+                background: #f5f5f5;
+                color: #666;
+            }
+            
+            .ml-dark-mode .ml-push-popup-decline {
+                background: #48484a;
+                color: #a1a1a6;
+            }
+
+            .ml-push-popup-decline:hover {
+                background: #e5e5e5;
+            }
+            
+            .ml-dark-mode .ml-push-popup-decline:hover {
+                background: #5a5a5c;
+            }
+
+            .ml-push-popup-success {
+                background: #e8f5e9;
+                border: 1.5px solid #34c759;
+                color: #256029;
+                border-radius: 12px;
+                padding: 16px 24px;
+                font-weight: 600;
+                font-size: 16px;
+                text-align: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                box-shadow: 0 1px 6px rgba(52,199,89,0.1);
+            }
+            
+            .ml-dark-mode .ml-push-popup-success {
+                background: #1e3a1e;
+                border-color: #30d158;
+                color: #30d158;
+            }
+
+            @media (max-width: 480px) {
+                .ml-push-popup {
+                    margin: 0;
+                    border-radius: 20px 20px 0 0;
+                }
+                
+                .ml-push-popup-heading {
+                    font-size: 20px;
+                }
+                
+                .ml-push-popup-text {
+                    font-size: 15px;
+                }
+            }
+
+        `;
+            const styleSheet = document.createElement('style');
+            styleSheet.id = 'ml-push-popup-styles';
+            styleSheet.textContent = styles;
+            document.head.appendChild(styleSheet);
+        }
+        // Increment style usage count
+        PushNotificationPopup.styleUsageCount++;
+    }
+
+    createPopup() {
+        // Create overlay
+        this.overlay = document.createElement('div');
+        this.overlay.className = 'ml-push-popup-overlay';
+
+        // Create popup container
+        this.popup = document.createElement('div');
+        this.popup.className = 'ml-push-popup';
+        
+        // Apply dark mode if enabled
+        if (this.options.darkMode) {
+            this.popup.classList.add('ml-dark-mode');
+        }
+
+        // Create close button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'ml-push-popup-close';
+        closeBtn.innerHTML = '×';
+        closeBtn.addEventListener('click', () => this.hide(true));
+
+        // Create content container
+        const content = document.createElement('div');
+        content.className = 'ml-push-popup-content';
+
+        // Create heading
+        const heading = document.createElement('h2');
+        heading.className = 'ml-push-popup-heading';
+        heading.textContent = this.options.heading;
+
+        // Create image (if provided)
+        let image = null;
+        if (this.options.image) {
+            image = document.createElement('img');
+            image.className = 'ml-push-popup-image';
+            image.src = this.options.image;
+            image.alt = 'Notification icon';
+        }
+
+        // Create text
+        const text = document.createElement('p');
+        text.className = 'ml-push-popup-text';
+        text.textContent = this.options.text;
+
+        // Create buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'ml-push-popup-buttons';
+
+        // Create accept button
+        const acceptBtn = document.createElement('button');
+        acceptBtn.className = 'ml-push-popup-button ml-push-popup-accept';
+        acceptBtn.textContent = this.options.acceptText;
+        acceptBtn.addEventListener('click', () => {
+            // Track accept action before triggering push prompt
+            this.trackEvent('ml_popup_accepted', {
+                event_category: 'conversion'
+            });
+            
+            this.triggerPushPrompt();
+        });
+
+        // Create decline button (only if declineText is provided)
+        let declineBtn = null;
+        if (this.options.declineText && this.options.declineText.trim() !== '') {
+            declineBtn = document.createElement('button');
+            declineBtn.className = 'ml-push-popup-button ml-push-popup-decline';
+            declineBtn.textContent = this.options.declineText;
+            declineBtn.addEventListener('click', () => {
+                // Track decline action
+                this.trackEvent('ml_popup_declined', {
+                    event_category: 'engagement'
+                });
+                
+                this.options.onDecline();
+                this.hide();
+            });
+        }
+
+        // Assemble the popup
+        content.appendChild(heading);
+        if (image) content.appendChild(image);
+        content.appendChild(text);
+        buttonsContainer.appendChild(acceptBtn);
+        if (declineBtn) buttonsContainer.appendChild(declineBtn);
+        content.appendChild(buttonsContainer);
+
+        this.popup.appendChild(closeBtn);
+        this.popup.appendChild(content);
+
+        // Add to DOM but keep hidden
+        document.body.appendChild(this.overlay);
+        document.body.appendChild(this.popup);
+    }
+
+    triggerPushPrompt() {
+        try {
+            // Call user's onAccept callback first
+            this.options.onAccept();
+
+            // Check if we're in debug mode or if native functions are available
+            if (this.options.debugMode) {
+                console.log('[PushPopup Debug] Debug mode - simulating push prompt acceptance');
+                // Simulate acceptance in debug mode
+                setTimeout(() => {
+                    this.updateUIForPushStatus(true);
+                }, 1000);
+                return;
+            }
+
+            // Safety check: Ensure native bridge is available
+            if (typeof nativeFunctions === 'undefined') {
+                throw new Error('nativeFunctions not available');
+            }
+
+            // Safety check: Ensure the specific function exists
+            if (typeof nativeFunctions.triggerPushPrompt !== 'function') {
+                throw new Error('triggerPushPrompt not available');
+            }
+
+            // Call the native function to show OS permission dialog
+            nativeFunctions.triggerPushPrompt();
+
+            // Don't hide the popup immediately - wait for status change
+            // The updateUIForPushStatus method will handle UI updates
+
+        } catch (e) {
+            console.error('[PushPopup] Error triggering push prompt:', e);
+            // Fallback: just hide the popup
+            this.hide();
+        }
+    }
+
+    bindEvents() {
+        // Store handler references for cleanup
+        this._onOverlayClick = (e) => {
+            if (e.target === this.overlay) {
+                this.hide(true);
+            }
+        };
+        this.overlay.addEventListener('click', this._onOverlayClick);
+
+        this._onKeyDown = (e) => {
+            if (e.key === 'Escape' && this.isVisible) {
+                this.hide(true);
+            }
+        };
+        document.addEventListener('keydown', this._onKeyDown);
+    }
+
+    show(isAutoTrigger = false) {
+        if (this.isVisible) return;
+        
+        // Check if this is an auto-trigger and we've already auto-triggered this session
+        if (isAutoTrigger && this.hasAutoTriggeredThisSession) {
+            console.log('[PushPopup] Auto-trigger blocked - already shown once this session');
+            return;
+        }
+        
+        // Mark that we've auto-triggered if this is an auto-trigger
+        if (isAutoTrigger) {
+            this.hasAutoTriggeredThisSession = true;
+        }
+
+        this.isVisible = true;
+        
+        // Increment session count when showing
+        this.incrementSessionCount();
+        
+        // Show overlay first
+        requestAnimationFrame(() => {
+            this.overlay.classList.add('ml-visible');
+            
+            // Track that popup is displayed
+            this.trackEvent('ml_popup_displayed', {
+                event_category: 'engagement',
+                trigger_type: isAutoTrigger ? 'auto' : 'manual'
+            });
+            
+            // Then show popup with slight delay
+            setTimeout(() => {
+                this.popup.classList.add('ml-visible');
+            }, 50);
+        });
+
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+    }
+
+    hide(userInitiated = false) {
+        if (!this.isVisible) return;
+
+        this.isVisible = false;
+        
+        // Track user-initiated close events
+        if (userInitiated) {
+            this.trackEvent('ml_popup_closed', {
+                event_category: 'engagement',
+                close_method: 'user_action'
+            });
+        }
+        
+        // Hide popup first
+        this.popup.classList.remove('ml-visible');
+        
+        // Then hide overlay
+        setTimeout(() => {
+            this.overlay.classList.remove('ml-visible');
+        }, 200);
+
+        // Restore body scroll
+        setTimeout(() => {
+            document.body.style.overflow = '';
+        }, 300);
+
+        // Call onClose callback
+        this.options.onClose();
+    }
+
+    destroy() {
+        // Clean up status monitoring
+        if (this.statusCheckInterval) {
+            clearInterval(this.statusCheckInterval);
+            this.statusCheckInterval = null;
+        }
+        
+        // Restore original push callback
+        if (this._originalPushCallback !== null) {
+            window.mlPushStatusChanged = this._originalPushCallback;
+        }
+        
+        // Remove event listeners
+        if (this.overlay && this._onOverlayClick) {
+            this.overlay.removeEventListener('click', this._onOverlayClick);
+        }
+        if (this._onKeyDown) {
+            document.removeEventListener('keydown', this._onKeyDown);
+        }
+        if (this.overlay) {
+            this.overlay.remove();
+        }
+        if (this.popup) {
+            this.popup.remove();
+        }
+        // Decrement style usage count and remove style if last popup
+        PushNotificationPopup.styleUsageCount = Math.max(0, PushNotificationPopup.styleUsageCount - 1);
+        if (PushNotificationPopup.styleUsageCount === 0) {
+            const styles = document.getElementById('ml-push-popup-styles');
+            if (styles) {
+                styles.remove();
+            }
+        }
+    }
+}
+
+// Global function for easy usage
+window.createPushPopup = function(options) {
+    return new PushNotificationPopup(options);
+};
+
+// Auto-initialize if window.pushPopupConfig exists
+if (typeof window.pushPopupConfig !== 'undefined') {
+    window.pushPopup = new PushNotificationPopup(window.pushPopupConfig);
+}
+    </script>
+    
     <script>
         // Test functions for popup widget
         function testBasicPopup() {
-            if (typeof createPushPopup === 'function') {
-                const popup = createPushPopup({
-                    heading: "Enable Notifications",
-                    text: "Stay updated with our latest news and updates.",
-                    debugMode: true
-                });
-                popup.show();
-            } else {
-                alert('Push popup widget not loaded. Please add your script.js file.');
-            }
+            const popup = createPushPopup({
+                heading: "Enable Notifications",
+                text: "Stay updated with our latest news and updates.",
+                debugMode: true
+            });
+            popup.show();
         }
         
         function testAnalyticsPopup() {
-            if (typeof createPushPopup === 'function') {
-                const popup = createPushPopup({
-                    heading: "Enable Analytics Tracking",
-                    text: "This popup will send events to Google Analytics for testing.",
-                    enableAnalytics: true,
-                    debugMode: true
-                });
-                popup.show();
-            } else {
-                alert('Push popup widget not loaded. Please add your script.js file.');
-            }
+            const popup = createPushPopup({
+                heading: "Enable Analytics Tracking",
+                text: "This popup will send events to Google Analytics for testing.",
+                enableAnalytics: true,
+                debugMode: true
+            });
+            popup.show();
         }
         
         function testDebugMode() {
-            if (typeof createPushPopup === 'function') {
-                console.log('[Test] Creating popup with debug mode and analytics...');
-                const popup = createPushPopup({
-                    heading: "Debug Mode Test",
-                    text: "Check the console for detailed analytics logging.",
-                    enableAnalytics: true,
-                    debugMode: true,
-                    autoTrigger: true,
-                    delay: 1000
-                });
-            } else {
-                alert('Push popup widget not loaded. Please add your script.js file.');
-            }
+            console.log('[Test] Creating popup with debug mode and analytics...');
+            const popup = createPushPopup({
+                heading: "Debug Mode Test",
+                text: "Check the console for detailed analytics logging.",
+                enableAnalytics: true,
+                debugMode: true,
+                autoTrigger: true,
+                delay: 1000
+            });
         }
         
         function checkGAStatus() {
@@ -367,10 +1493,38 @@
             }
         }
         
+        // Initialize the main popup that auto-triggers after 3 seconds
+        console.log('[Test Page] Initializing auto-trigger popup with analytics...');
+        
+        const mainPopup = createPushPopup({
+            heading: "🔔 Enable Push Notifications",
+            text: "Stay connected with the latest updates from MobiLoud! Get notified about new features, important announcements, and platform updates.",
+            acceptText: "Enable Notifications",
+            declineText: "Maybe Later",
+            successMessage: "🎉 Perfect! You're all set to receive notifications.",
+            autoTrigger: true,
+            delay: 3000, // Show after 3 seconds
+            enableAnalytics: true, // Enable Google Analytics tracking
+            debugMode: true, // Enable for testing (bypasses app checks)
+            onAccept: () => {
+                console.log('✅ User accepted push notifications');
+                console.log('📊 This should trigger ml_popup_accepted event in GA');
+            },
+            onDecline: () => {
+                console.log('❌ User declined push notifications');
+                console.log('📊 This should trigger ml_popup_declined event in GA');
+            },
+            onClose: () => {
+                console.log('🔐 Popup closed');
+                console.log('📊 This should trigger ml_popup_closed event in GA');
+            }
+        });
+        
         // Log page load for testing
         console.log('[Test Page] Google Analytics test page loaded');
         console.log('[Test Page] gtag available:', typeof window.gtag === 'function');
         console.log('[Test Page] dataLayer available:', Array.isArray(window.dataLayer));
+        console.log('[Test Page] Main popup initialized - will auto-trigger in 3 seconds');
         
         // Send a test page view event
         if (typeof window.gtag === 'function') {
