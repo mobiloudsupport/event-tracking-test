@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Push Notification Analytics Test</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mobiloud/push-banner-widget/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mobiloud/ml-push-popup/script.js"></script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1F0KNQD5W3"></script>
     <script>
@@ -305,12 +305,13 @@
         // Test functions for popup widget
         function testBasicPopup() {
             if (typeof createPushPopup === 'function') {
-                const popup = createPushPopup({
-                    heading: "Enable Notifications",
-                    text: "Stay updated with our latest news and updates.",
-                    debugMode: true
-                });
-                popup.show();
+				window.createPushPopup({
+				  autoTrigger: true,
+				  delay: 3000,
+				  debugMode: true,
+				  enableAnalytics: true
+				  // ...other options
+				});
             } else {
                 alert('Push popup widget not loaded. Please add your script.js file.');
             }
